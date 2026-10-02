@@ -3,6 +3,14 @@ from signal_model import *
 def add_signals(signals):
     first_signal = signals[0]
 
+    for signal in signals:
+        if signal.n != first_signal.n:
+            raise ValueError("Signals must have the same number of samples")
+
+    for signal in signals:
+        if signal.indices != first_signal.indices:
+            raise ValueError("Signals must have the same indices")
+
     ans=Signal(first_signal.signal_type, first_signal.is_periodic, first_signal.n)
     ans.indices = first_signal.indices.copy()
 

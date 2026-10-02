@@ -1,3 +1,4 @@
+import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -5,6 +6,7 @@ from reader import *
 from operations import *
 from plot import *
 from writer import *
+from Task1Test import *
 
 
 class SignalGUI:
@@ -226,9 +228,12 @@ class SignalGUI:
         )
 
         if output_path:
-            write_signal(
-                result,
-                output_path
+            write_signal(result,output_path)
+            AddSignalSamplesAreEqual(
+                os.path.basename(self.signal_paths[0]),
+                os.path.basename(self.signal_paths[1]),
+                result.indices,
+                result.samples
             )
 
         plot_signal(
@@ -281,9 +286,11 @@ class SignalGUI:
         )
 
         if output_path:
-            write_signal(
-                result,
-                output_path
+            write_signal(result,output_path)
+            MultiplySignalByConst(
+                constant,
+                result.indices,
+                result.samples
             )
 
         plot_signal(
