@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import os
+
 
 def ReadSignalFile(file_name):
     expected_indices = []
@@ -45,15 +47,22 @@ def AddSignalSamplesAreEqual(
         userSecondSignal == 'Signal2.txt'
     ):
 
-        file_name = "output/Signal1+signal2.txt"
-
+        file_name = os.path.join(
+            os.path.dirname(__file__),
+            "output",
+            "Signal1+signal2.txt"
+        )
     elif (
         userFirstSignal == 'Signal1.txt'
         and
         userSecondSignal == 'signal3.txt'
     ):
 
-        file_name = "output/signal1+signal3.txt"
+        file_name = os.path.join(
+            os.path.dirname(__file__),
+            "output",
+            "signal1+signal3.txt"
+        )
 
     expected_indices, expected_samples = ReadSignalFile(
         file_name
@@ -115,15 +124,17 @@ def MultiplySignalByConst(
 
     if User_Const == 5:
 
-        file_name = (
-            "output/"
+        file_name = os.path.join(
+            os.path.dirname(__file__),
+            "output",
             "MultiplySignalByConstant-Signal1 - by 5.txt"
         )
 
     elif User_Const == 10:
 
-        file_name = (
-            "output/"
+        file_name = os.path.join(
+            os.path.dirname(__file__),
+            "output",
             "MultiplySignalByConstant-signal2 - by 10.txt"
         )
 

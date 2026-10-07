@@ -1,4 +1,4 @@
-from signal_model import Signal
+from .signal_model import Signal
 
 
 def read_signal(file_path):

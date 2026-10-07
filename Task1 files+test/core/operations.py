@@ -1,4 +1,4 @@
-from signal_model import *
+from .signal_model import *
 
 def add_signals(signals):
     first_signal = signals[0]
@@ -40,10 +40,10 @@ def subtract_signals(signals):
     for i in range(first_signal.n):
         total = first_signal.samples[i]
 
-        for signal in signals[1:]:
-            total -= signal.samples[i]
+        for j in range(1, len(signals)):
+            total -= signals[j].samples[i]
 
-        ans.samples.append(total)
+        ans.samples.append(abs(total))
 
     return ans
 

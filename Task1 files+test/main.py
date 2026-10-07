@@ -62,7 +62,8 @@ class SignalGUI:
             "Subtraction",
             "Multiplication",
             "Squaring",
-            "Normalization"
+            "Normalization",
+            "Accumulation"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -280,6 +281,41 @@ class SignalGUI:
         plot_signal(
             result,
             "Addition Result"
+        )
+
+    def subtraction(self):
+        if len(self.signal_paths) == 0:
+            messagebox.showerror("Error", "Please set the number of signals.")
+            return
+
+        signals = []
+
+        for path in self.signal_paths:
+            if path == "":
+                messagebox.showerror("Error", "Please select all signal files.")
+                return
+
+            signals.append(read_signal(path))
+
+        result = subtract_signals(signals)
+
+        if result is None:
+            return
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Subtraction Result",
+            defaultextension=".txt",
+            filetypes=[
+                ("Text Files", "*.txt")
+            ]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "Subtraction Result"
         )
 
     def multiplication(self):
