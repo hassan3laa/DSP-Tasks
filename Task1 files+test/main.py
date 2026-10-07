@@ -2,11 +2,11 @@ import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-from reader import *
-from operations import *
-from plot import *
-from writer import *
-from Task1Test import *
+from core.reader import *
+from core.operations import *
+from core.plot import *
+from core.writer import *
+from Task1.Task1Test import *
 
 
 class SignalGUI:
@@ -59,7 +59,10 @@ class SignalGUI:
             "Display Signal",
             "Display Two Signals",
             "Addition",
-            "Multiplication"
+            "Subtraction",
+            "Multiplication",
+            "Squaring",
+            "Normalization"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -84,6 +87,28 @@ class SignalGUI:
         )
 
         self.constant_entry.pack(side=tk.LEFT, padx=10)
+
+        self.normalization_frame = tk.Frame(root)
+
+        tk.Label(
+            self.normalization_frame,
+            text="Normalization:"
+        ).pack(side=tk.LEFT)
+
+        self.normalization_option = tk.StringVar()
+        self.normalization_option.set("-1 to 1")
+
+        normalization_options = [
+            "-1 to 1",
+            "0 to 1"
+        ]
+
+        tk.OptionMenu(
+            self.normalization_frame,
+            self.normalization_option,
+            *normalization_options
+        ).pack(side=tk.LEFT, padx=10)
+
 
         tk.Button(
             root,
@@ -152,10 +177,14 @@ class SignalGUI:
             label.config(text=file_name)
 
     def operation_changed(self, operation):
+        self.constant_frame.pack_forget()
+        self.normalization_frame.pack_forget()
+
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
-        else:
-            self.constant_frame.pack_forget()
+
+        elif operation == "Normalization":
+            self.normalization_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -169,8 +198,20 @@ class SignalGUI:
         elif operation == "Addition":
             self.addition()
 
+        elif operation == "Subtraction":
+            self.subtraction()
+
         elif operation == "Multiplication":
             self.multiplication()
+
+        elif operation == "Squaring":
+            self.squaring()
+
+        elif operation == "Normalization":
+            self.normalization()
+
+        elif operation == "Accumulation":
+            self.accumulation()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -296,6 +337,114 @@ class SignalGUI:
         plot_signal(
             result,
             "Multiplication Result"
+        )
+
+    def squaring(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        result = square_signal(signal)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Squaring Result",
+            defaultextension=".txt",
+            filetypes=[
+                ("Text Files", "*.txt")
+            ]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "Squaring Result"
+        )
+
+
+    def normalization(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        option = self.normalization_option.get()
+
+        result = normalize_signal(signal, option)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Normalization Result",
+            defaultextension=".txt",
+            filetypes=[
+                ("Text Files", "*.txt")
+            ]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "Normalization Result"
+        )
+
+    def accumulation(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        result = accumulate_signal(signal)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Accumulation Result",
+            defaultextension=".txt",
+            filetypes=[
+                ("Text Files", "*.txt")
+            ]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "Accumulation Result"
         )
 
 
