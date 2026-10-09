@@ -12,7 +12,7 @@ def quantize_signal(signals, num_of_levels=None, num_of_bits=None):
     if num_of_bits is not None:
         num_of_levels=2**num_of_bits
     elif num_of_levels is not None:
-        num_of_bits=math.ceil(math.log(num_of_levels,2))
+        num_of_bits=math.ceil(math.log2(num_of_levels))
     else:
         print("Invalid number of levels/bits")
 
@@ -30,6 +30,7 @@ def quantize_signal(signals, num_of_levels=None, num_of_bits=None):
         midpoints.append(q_i)
         binary_codes.append(format(i, f'0{num_of_bits}b'))
 
+    interval_indices = []
     quantized_signals = []
     encoded_signals = []
     quantization_errors = []
@@ -44,8 +45,9 @@ def quantize_signal(signals, num_of_levels=None, num_of_bits=None):
         code = binary_codes[k]
         err = round(q_val - x, 3)
 
+        interval_indices.append(k + 1)
         quantized_signals.append(q_val)
         encoded_signals.append(code)
         quantization_errors.append(err)
 
-    return quantized_signals,encoded_signals, quantization_errors
+    return  interval_indices,quantized_signals,encoded_signals, quantization_errors
