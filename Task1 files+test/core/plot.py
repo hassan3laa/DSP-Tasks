@@ -48,3 +48,47 @@ def plot_two_signals(signal1, signal2) :
     plt.legend()
     plt.grid()
     plt.show()
+
+def plot_quantization(indices, original, quantized, errors):
+    fig, axes = plt.subplots(2, 1, figsize=(9, 7))
+
+    # Original signal and quantized signal
+    axes[0].stem(
+        indices,
+        original,
+        linefmt="b-",
+        markerfmt="bo",
+        basefmt="k-",
+        label="Original Signal"
+    )
+
+    axes[0].step(
+        indices,
+        quantized,
+        where="mid",
+        color="red",
+        label="Quantized Signal"
+    )
+
+    axes[0].set_title("Original vs Quantized Signal")
+    axes[0].set_xlabel("Sample Index")
+    axes[0].set_ylabel("Amplitude")
+    axes[0].legend()
+    axes[0].grid(True)
+
+    # Quantization error
+    axes[1].stem(
+        indices,
+        errors,
+        linefmt="g-",
+        markerfmt="go",
+        basefmt="k-"
+    )
+
+    axes[1].set_title("Quantization Error")
+    axes[1].set_xlabel("Sample Index")
+    axes[1].set_ylabel("Error")
+    axes[1].grid(True)
+
+    fig.tight_layout()
+    plt.show()

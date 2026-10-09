@@ -676,6 +676,13 @@ class SignalGUI:
                 errors
             )
 
+        plot_quantization(
+            signal.indices,
+            signal.samples,
+            quantized_values,
+            errors
+        )
+
         result_text = "Index | Encoded | Quantized | Error\n\n"
 
         for i in range(len(signal.samples)):
