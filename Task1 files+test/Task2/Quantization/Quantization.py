@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-from signal_model import Signal
+# from signal_model import Signal
 
 #Quantization steps: ha5od mn el user el number of bits aw number of levels, number of levels (L)=2(power)(number of bits (b))
 #Get min and max, delta = (max-min)/number of levels

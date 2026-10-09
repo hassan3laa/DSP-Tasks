@@ -8,6 +8,10 @@ from core.plot import *
 from core.writer import *
 from Task1.Task1Test import *
 
+from Task2.Quantization.Quantization import quantize_signal
+from Task2.Quantization.QuanTest1 import QuantizationTest1
+from Task2.Quantization.QuanTest2 import QuantizationTest2
+
 
 class SignalGUI:
     def __init__(self, root):
@@ -63,7 +67,8 @@ class SignalGUI:
             "Multiplication",
             "Squaring",
             "Normalization",
-            "Accumulation"
+            "Accumulation",
+            "Quantization"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -109,6 +114,30 @@ class SignalGUI:
             self.normalization_option,
             *normalization_options
         ).pack(side=tk.LEFT, padx=10)
+
+        self.quantization_frame = tk.Frame(root)
+
+        tk.Label(
+            self.quantization_frame,
+            text="Choose:"
+        ).pack(side=tk.LEFT)
+
+        self.quantization_type = tk.StringVar()
+        self.quantization_type.set("Number of Bits")
+
+        tk.OptionMenu(
+            self.quantization_frame,
+            self.quantization_type,
+            "Number of Bits",
+            "Number of Levels"
+        ).pack(side=tk.LEFT, padx=5)
+
+        self.quantization_entry = tk.Entry(
+            self.quantization_frame,
+            width=10
+        )
+
+        self.quantization_entry.pack(side=tk.LEFT, padx=5)
 
 
         tk.Button(
@@ -180,12 +209,16 @@ class SignalGUI:
     def operation_changed(self, operation):
         self.constant_frame.pack_forget()
         self.normalization_frame.pack_forget()
+        self.quantization_frame.pack_forget()
 
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
 
         elif operation == "Normalization":
             self.normalization_frame.pack(pady=5)
+
+        elif operation == "Quantization":
+            self.quantization_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -213,6 +246,9 @@ class SignalGUI:
 
         elif operation == "Accumulation":
             self.accumulation()
+
+        elif operation == "Quantization":
+            self.quantization()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -539,6 +575,126 @@ class SignalGUI:
             result,
             "Accumulation Result"
         )
+
+    def quantization(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        try:
+            number = int(self.quantization_entry.get())
+
+            if number <= 0:
+                messagebox.showerror(
+                    "Error",
+                    "Number must be greater than 0."
+                )
+                return
+
+            if (
+                    self.quantization_type.get() == "Number of Bits"
+                    and number > 16
+            ):
+                messagebox.showerror(
+                    "Error",
+                    "Please enter a reasonable number of bits."
+                )
+                return
+
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Please enter a valid integer."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if not signal.samples:
+            messagebox.showerror(
+                "Error",
+                "The selected signal has no samples."
+            )
+            return
+
+        if self.quantization_type.get() == "Number of Bits":
+            interval_indices, quantized_values, encoded_values, errors = (
+                quantize_signal(
+                    signal.samples,
+                    num_of_bits=number
+                )
+            )
+        else:
+            interval_indices, quantized_values, encoded_values, errors = (
+                quantize_signal(
+                    signal.samples,
+                    num_of_levels=number
+                )
+            )
+
+        input_name = os.path.basename(self.signal_paths[0])
+
+        test_folder = os.path.join(
+            os.path.dirname(__file__),
+            "Task2",
+            "Quantization"
+        )
+
+        if input_name == "Quan1_input.txt" and number == 3 and self.quantization_type.get() == "Number of Bits":
+            QuantizationTest1(
+                os.path.join(test_folder, "Quan1_Out.txt"),
+                encoded_values,
+                quantized_values
+            )
+
+        elif input_name == "Quan2_input.txt" and (
+                (
+                        self.quantization_type.get() == "Number of Bits"
+                        and number == 2
+                )
+                or
+                (
+                        self.quantization_type.get() == "Number of Levels"
+                        and number == 4
+                )
+        ):
+            QuantizationTest2(
+                os.path.join(test_folder, "Quan2_Out.txt"),
+                interval_indices,
+                encoded_values,
+                quantized_values,
+                errors
+            )
+
+        result_text = "Index | Encoded | Quantized | Error\n\n"
+
+        for i in range(len(signal.samples)):
+            result_text += (
+                    str(signal.indices[i])
+                    + " | "
+                    + str(encoded_values[i])
+                    + " | "
+                    + str(quantized_values[i])
+                    + " | "
+                    + str(errors[i])
+                    + "\n"
+            )
+
+        messagebox.showinfo(
+            "Quantization Result",
+            result_text
+        )
+
 
 
 root = tk.Tk()
