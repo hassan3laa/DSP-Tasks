@@ -299,6 +299,26 @@ class SignalGUI:
 
         result = subtract_signals(signals)
 
+        if os.path.basename(self.signal_paths[1]) == "signal3.txt":
+            expected_file = os.path.join(
+                "Task2",
+                "OUTPUT Arithmetic operations",
+                "signal1-signal3.txt"
+            )
+        else:
+            expected_file = os.path.join(
+                "Task2",
+                "OUTPUT Arithmetic operations",
+                "signal1-signal2.txt"
+            )
+
+        SignalSamplesAreEqual(
+            "Subtraction",
+            expected_file,
+            result.indices,
+            result.samples
+        )
+
         if result is None:
             return
 
@@ -394,6 +414,13 @@ class SignalGUI:
 
         result = square_signal(signal)
 
+        SignalSamplesAreEqual("Squaring",
+                              os.path.join(
+                                  "Task2",
+                                  "OUTPUT Arithmetic operations",
+                                  "Output squaring signal 1.txt"),
+                              result.indices, result.samples)
+
         output_path = filedialog.asksaveasfilename(
             title="Save Squaring Result",
             defaultextension=".txt",
@@ -432,6 +459,26 @@ class SignalGUI:
 
         result = normalize_signal(signal, option)
 
+        if option == "-1 to 1":
+            expected_file = os.path.join(
+                "Task2",
+                "OUTPUT Arithmetic operations",
+                "normalize of signal 1 (from -1 to 1)-- output.txt"
+            )
+        else:
+            expected_file = os.path.join(
+                "Task2",
+                "OUTPUT Arithmetic operations",
+                "normlize signal 2 (from 0 to 1 )-- output.txt"
+            )
+
+        SignalSamplesAreEqual(
+            "Normalization " + option,
+            expected_file,
+            result.indices,
+            result.samples
+        )
+
         output_path = filedialog.asksaveasfilename(
             title="Save Normalization Result",
             defaultextension=".txt",
@@ -466,6 +513,16 @@ class SignalGUI:
         signal = read_signal(self.signal_paths[0])
 
         result = accumulate_signal(signal)
+
+        SignalSamplesAreEqual("Accumulation",
+                              os.path.join(
+                                  "Task2",
+                                  "OUTPUT Arithmetic operations",
+                                  "output accumulation for signal1.txt"
+                              ),
+                              result.indices,
+                              result.samples
+                              )
 
         output_path = filedialog.asksaveasfilename(
             title="Save Accumulation Result",
