@@ -687,7 +687,7 @@ class SignalGUI:
 
         for i in range(len(signal.samples)):
             result_text += (
-                    str(signal.indices[i])
+                    str(interval_indices[i])
                     + " | "
                     + str(encoded_values[i])
                     + " | "
