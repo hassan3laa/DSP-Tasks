@@ -105,7 +105,7 @@ def plot_dft(frequencies, amplitudes, phases):
     axes[1].stem(frequencies, phases)
     axes[1].set_title("Frequency vs Phase")
     axes[1].set_xlabel("Frequency (Hz)")
-    axes[1].set_ylabel("Phase (Degrees)")
+    axes[1].set_ylabel("Phase (Radians)")
     axes[1].grid(True)
 
     fig.tight_layout()

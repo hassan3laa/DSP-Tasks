@@ -9,8 +9,6 @@ def SignalComapreAmplitude(SignalInput = [] ,SignalOutput= []):
         for i in range(len(SignalInput)):
             if abs(SignalInput[i]-SignalOutput[i])>0.001:
                 return False
-            elif SignalInput[i]!=SignalOutput[i]:
-                return False
         return True
 
 def RoundPhaseShift(P):
@@ -19,18 +17,17 @@ def RoundPhaseShift(P):
     return float(P%(2*math.pi))
 
 #Use to test the PhaseShift of DFT
-def SignalComaprePhaseShift(SignalInput = [] ,SignalOutput= []):
+def SignalComaprePhaseShift(SignalInput=[], SignalOutput=[]):
     if len(SignalInput) != len(SignalOutput):
         return False
-    else:
-        for i in range(len(SignalInput)):
-            A=round(SignalInput[i])
-            B=round(SignalOutput[i])
-            if abs(A-B)>0.0001:
-                return False
-            elif A!=B:
-                return False
-        return True
 
+    for i in range(len(SignalInput)):
+        difference = math.atan2(
+            math.sin(SignalInput[i] - SignalOutput[i]),
+            math.cos(SignalInput[i] - SignalOutput[i])
+        )
 
+        if abs(difference) > 0.001:
+            return False
 
+    return True

@@ -103,38 +103,38 @@ def accumulate_signal(signal):
     return ans
 
 def dft(signal, sampling_frequency):
-    n=len(signal.samples)
-    if(n==0):
+    n = len(signal.samples)
+    if n == 0:
         raise ValueError("Signal has no samples")
 
-    if sampling_frequency<=0:
+    if sampling_frequency <= 0:
         raise ValueError("Sampling frequency has to be positive")
 
-    frequencies=[]
-    amplitudes=[]
-    phases=[]
+    frequencies = []
+    amplitudes = []
+    phases = []
     for k in range(n):
-        real=0
-        imagin=0
+        real = 0
+        imagin = 0
         for i in range(n):
             angel = 2*math.pi*k*i/n
-            real+=signal.samples[i]*math.cos(angel)
-            imagin-= signal.samples[i]*math.sin(angel)
+            real += signal.samples[i]*math.cos(angel)
+            imagin -= signal.samples[i]*math.sin(angel)
+        amplitude = math.sqrt(real**2+imagin**2)
+        phase=math.atan2(imagin,real)
 
-        amplitude=math.sqrt(real**2+imagin**2)
-        phase=math.degrees(math.atan2(imagin,real))
-
-        frequencies.append(k*sampling_frequency/n)
+        frequencies.append(k * sampling_frequency / n)
         amplitudes.append(amplitude)
         phases.append(phase)
 
-    maximum=max(amplitudes)
-    if maximum!=0:
-        normalized_amplitudes=[amplitude/maximum for amplitude in amplitudes]
-    else:
-        normalized_amplitudes=[0]*n
+    return frequencies, amplitudes, phases
 
-    return frequencies, normalized_amplitudes, phases
+
+def normalize_amplitudes(amplitudes):
+    maximum = max(amplitudes)
+    if maximum == 0:
+        return [0] * len(amplitudes)
+    return [amplitude / maximum for amplitude in amplitudes]
 
 def get_dominant_frequencies(frequencies, normalized_amplitudes):
     dominant=[]
@@ -143,3 +143,17 @@ def get_dominant_frequencies(frequencies, normalized_amplitudes):
             dominant.append(frequency)
 
     return dominant
+
+def modify_component (amplitudes, phases, k ,new_amplitude = None, new_phase = None):
+    if k<0 or k>=len(amplitudes):
+        raise ValueError("Component index out of range")
+
+    amplitudes = amplitudes.copy()
+    phases = phases.copy()
+
+    if new_amplitude is not None:
+        amplitudes[k]=new_amplitude
+
+    if new_phase is not None:
+        phases[k]=new_phase
+    return amplitudes, phases

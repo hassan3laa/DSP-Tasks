@@ -1,5 +1,4 @@
 import os
-import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -13,7 +12,27 @@ from Task2.Quantization.Quantization import quantize_signal
 from Task2.Quantization.QuanTest1 import QuantizationTest1
 from Task2.Quantization.QuanTest2 import QuantizationTest2
 
+import sys
+from docx import Document
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Task4", "Test Cases"))
+
+from signalcompare import SignalComapreAmplitude, SignalComaprePhaseShift
+
+
+def read_amp_phase(path):
+    if path.endswith(".docx"):
+        lines = [p.text for p in Document(path).paragraphs]
+    else:
+        lines = open(path).read().splitlines()
+
+    amps, phases = [], []
+    for line in lines[3:]:
+        parts = line.replace("f", "").split()
+        if len(parts) == 2:
+            amps.append(float(parts[0]))
+            phases.append(float(parts[1]))
+    return amps, phases
 
 class SignalGUI:
     def __init__(self, root):
@@ -71,7 +90,8 @@ class SignalGUI:
             "Normalization",
             "Accumulation",
             "Quantization",
-            "DFT"
+            "DFT",
+            "Modify Components"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -155,6 +175,20 @@ class SignalGUI:
         )
         self.sampling_entry.pack(side=tk.LEFT, padx=5)
 
+        self.modify_frame = tk.Frame(root)
+
+        tk.Label(self.modify_frame, text="Index k:").pack(side=tk.LEFT)
+        self.index_entry = tk.Entry(self.modify_frame, width=6)
+        self.index_entry.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(self.modify_frame, text="New Amplitude:").pack(side=tk.LEFT)
+        self.new_amp_entry = tk.Entry(self.modify_frame, width=8)
+        self.new_amp_entry.pack(side=tk.LEFT, padx=5)
+
+        tk.Label(self.modify_frame, text="New Phase (rad):").pack(side=tk.LEFT)
+        self.new_phase_entry = tk.Entry(self.modify_frame, width=8)
+        self.new_phase_entry.pack(side=tk.LEFT, padx=5)
+
 
         tk.Button(
             root,
@@ -227,6 +261,7 @@ class SignalGUI:
         self.normalization_frame.pack_forget()
         self.quantization_frame.pack_forget()
         self.sampling_frame.pack_forget()
+        self.modify_frame.pack_forget()
 
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
@@ -239,6 +274,10 @@ class SignalGUI:
 
         elif operation == "DFT":
             self.sampling_frame.pack(pady=5)
+
+        elif operation == "Modify Components":
+            self.sampling_frame.pack(pady=5)
+            self.modify_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -272,6 +311,9 @@ class SignalGUI:
 
         elif operation == "DFT":
             self.dft()
+
+        elif operation == "Modify Components":
+            self.modify_components()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -749,9 +791,38 @@ class SignalGUI:
                 signal, sampling_frequency
             )
 
-            dominant = get_dominant_frequencies(frequencies, amplitudes)
+            normalized_amplitudes = normalize_amplitudes(amplitudes)
 
-            plot_dft(frequencies, amplitudes, phases)
+            dominant = get_dominant_frequencies(frequencies, normalized_amplitudes)
+
+            output_path = filedialog.asksaveasfilename(
+                title="Save DFT Result",
+                defaultextension=".txt",
+                filetypes=[
+                    ("Text Files", "*.txt")
+                ]
+            )
+
+            if output_path:
+                with open(output_path, "w") as f:
+                    f.write("1\n0\n" + str(len(amplitudes)) + "\n")
+                    for a, p in zip(amplitudes, phases):
+                        f.write(f"{a} {p}\n")
+
+                if os.path.basename(self.signal_paths[0]) == "input_Signal_DFT.txt":
+                    expected = os.path.join(
+                        os.path.dirname(os.path.abspath(__file__)),
+                        "Task4", "Test Cases", "DFT", "Output_Signal_DFT_A,Phase.docx"
+                    )
+                    my_amps, my_phases = read_amp_phase(output_path)
+                    exp_amps, exp_phases = read_amp_phase(expected)
+
+                    if SignalComapreAmplitude(my_amps, exp_amps) and SignalComaprePhaseShift(my_phases, exp_phases):
+                        messagebox.showinfo("DFT Test", "DFT Test case passed successfully")
+                    else:
+                        messagebox.showerror("DFT Test", "DFT Test case failed")
+
+            plot_dft(frequencies, normalized_amplitudes, phases)
 
             messagebox.showinfo(
                 "Dominant Frequencies",
@@ -767,6 +838,53 @@ class SignalGUI:
                 "Error",
                 "Please enter a valid positive sampling frequency."
             )
+
+    def modify_components(self):
+        if len(self.signal_paths) != 1 or not self.signal_paths[0]:
+            messagebox.showerror("Error", "Please select one signal file.")
+            return
+
+        try:
+            sampling_frequency = float(self.sampling_entry.get())
+            k = int(self.index_entry.get())
+
+            new_amplitude = None
+            if self.new_amp_entry.get().strip() != "":
+                new_amplitude = float(self.new_amp_entry.get())
+
+            new_phase = None
+            if self.new_phase_entry.get().strip() != "":
+                new_phase = float(self.new_phase_entry.get())
+
+            signal = read_signal(self.signal_paths[0])
+            frequencies, amplitudes, phases = dft(signal, sampling_frequency)
+
+            amplitudes, phases = modify_component(
+                amplitudes, phases, k, new_amplitude, new_phase
+            )
+
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Please enter a valid sampling frequency, component index and values."
+            )
+            return
+
+        result = Signal(1, signal.is_periodic, len(amplitudes))
+        result.frequencies = frequencies
+        result.amplitudes = amplitudes
+        result.phases = phases
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Modified Components",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_dft(frequencies, normalize_amplitudes(amplitudes), phases)
 
 
 root = tk.Tk()
