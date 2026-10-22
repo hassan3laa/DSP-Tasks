@@ -14,7 +14,7 @@ from Task2.Quantization.QuanTest1 import QuantizationTest1
 from Task2.Quantization.QuanTest2 import QuantizationTest2
 
 
-from signalcompare import *
+from Tassignalcompare import *
 
 class SignalGUI:
     def __init__(self, root):
