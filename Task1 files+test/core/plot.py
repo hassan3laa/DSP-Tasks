@@ -92,3 +92,21 @@ def plot_quantization(indices, original, quantized, errors):
 
     fig.tight_layout()
     plt.show()
+
+def plot_dft(frequencies, amplitudes, phases):
+    fig, axes = plt.subplots(2, 1, figsize=(9, 7))
+
+    axes[0].stem(frequencies, amplitudes)
+    axes[0].set_title("Frequency vs Normalized Amplitude")
+    axes[0].set_xlabel("Frequency (Hz)")
+    axes[0].set_ylabel("Normalized Amplitude")
+    axes[0].grid(True)
+
+    axes[1].stem(frequencies, phases)
+    axes[1].set_title("Frequency vs Phase")
+    axes[1].set_xlabel("Frequency (Hz)")
+    axes[1].set_ylabel("Phase (Degrees)")
+    axes[1].grid(True)
+
+    fig.tight_layout()
+    plt.show()

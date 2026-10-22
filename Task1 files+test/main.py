@@ -1,4 +1,5 @@
 import os
+import sys
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
@@ -12,6 +13,8 @@ from Task2.Quantization.Quantization import quantize_signal
 from Task2.Quantization.QuanTest1 import QuantizationTest1
 from Task2.Quantization.QuanTest2 import QuantizationTest2
 
+
+from signalcompare import *
 
 class SignalGUI:
     def __init__(self, root):
@@ -68,7 +71,8 @@ class SignalGUI:
             "Squaring",
             "Normalization",
             "Accumulation",
-            "Quantization"
+            "Quantization",
+            "DFT"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -138,6 +142,19 @@ class SignalGUI:
         )
 
         self.quantization_entry.pack(side=tk.LEFT, padx=5)
+
+        self.sampling_frame = tk.Frame(root)
+
+        tk.Label(
+            self.sampling_frame,
+            text="Sampling Frequency (Hz):"
+        ).pack(side=tk.LEFT)
+
+        self.sampling_entry = tk.Entry(
+            self.sampling_frame,
+            width=10
+        )
+        self.sampling_entry.pack(side=tk.LEFT, padx=5)
 
 
         tk.Button(
@@ -210,6 +227,7 @@ class SignalGUI:
         self.constant_frame.pack_forget()
         self.normalization_frame.pack_forget()
         self.quantization_frame.pack_forget()
+        self.sampling_frame.pack_forget()
 
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
@@ -219,6 +237,9 @@ class SignalGUI:
 
         elif operation == "Quantization":
             self.quantization_frame.pack(pady=5)
+
+        elif operation == "DFT":
+            self.sampling_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -249,6 +270,9 @@ class SignalGUI:
 
         elif operation == "Quantization":
             self.quantization()
+
+        elif operation == "DFT":
+            self.dft()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -702,6 +726,48 @@ class SignalGUI:
             result_text
         )
 
+    def dft(self):
+        if len(self.signal_paths) != 1 or not self.signal_paths[0]:
+            messagebox.showerror("Error", "Please select one signal file.")
+            return
+
+        try:
+            sampling_frequency = float(self.sampling_entry.get())
+
+            if sampling_frequency <= 0:
+                raise ValueError
+
+            signal = read_signal(self.signal_paths[0])
+
+            if signal.signal_type != 0:
+                messagebox.showerror(
+                    "Error",
+                    "DFT requires a time-domain signal."
+                )
+                return
+
+            frequencies, amplitudes, phases = dft(
+                signal, sampling_frequency
+            )
+
+            dominant = get_dominant_frequencies(frequencies, amplitudes)
+
+            plot_dft(frequencies, amplitudes, phases)
+
+            messagebox.showinfo(
+                "Dominant Frequencies",
+                "Frequencies above 0.5 normalized amplitude:\n"
+                + (
+                    "\n".join(f"{frequency:.3f} Hz" for frequency in dominant)
+                    if dominant else "No dominant frequencies found."
+                )
+            )
+
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Please enter a valid positive sampling frequency."
+            )
 
 
 root = tk.Tk()

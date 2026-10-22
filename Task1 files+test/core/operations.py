@@ -1,4 +1,7 @@
+from numpy.ma.core import maximum
+
 from .signal_model import *
+import math
 
 def add_signals(signals):
     first_signal = signals[0]
@@ -98,3 +101,45 @@ def accumulate_signal(signal):
         ans.samples.append(total)
 
     return ans
+
+def dft(signal, sampling_frequency):
+    n=len(signal.samples)
+    if(n==0):
+        raise ValueError("Signal has no samples")
+
+    if sampling_frequency<=0:
+        raise ValueError("Sampling frequency has to be positive")
+
+    frequencies=[]
+    amplitudes=[]
+    phases=[]
+    for k in range(n):
+        real=0
+        imagin=0
+        for i in range(n):
+            angel = 2*math.pi*k*i/n
+            real+=signal.samples[i]*math.cos(angel)
+            imagin-= signal.samples[i]*math.sin(angel)
+
+        amplitude=math.sqrt(real**2+imagin**2)
+        phase=math.degrees(math.atan2(imagin,real))
+
+        frequencies.append(k*sampling_frequency/n)
+        amplitudes.append(amplitude)
+        phases.append(phase)
+
+    maximum=max(amplitudes)
+    if maximum!=0:
+        normalized_amplitudes=[amplitude/maximum for amplitude in amplitudes]
+    else:
+        normalized_amplitudes=[0]*n
+
+    return frequencies, normalized_amplitudes, phases
+
+def get_dominant_frequencies(frequencies, normalized_amplitudes):
+    dominant=[]
+    for frequency, amplitude in zip(frequencies, normalized_amplitudes):
+        if amplitude>0.5:
+            dominant.append(frequency)
+
+    return dominant
