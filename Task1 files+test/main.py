@@ -91,7 +91,8 @@ class SignalGUI:
             "Accumulation",
             "Quantization",
             "DFT",
-            "Modify Components"
+            "Modify Components",
+            "Remove DC Component"
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -314,6 +315,9 @@ class SignalGUI:
 
         elif operation == "Modify Components":
             self.modify_components()
+
+        elif operation == "Remove DC Component":
+            self.remove_DC_component()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -885,6 +889,48 @@ class SignalGUI:
             write_signal(result, output_path)
 
         plot_dft(frequencies, normalize_amplitudes(amplitudes), phases)
+
+    def remove_DC_component(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if not signal.samples:
+            messagebox.showerror(
+                "Error",
+                "The selected signal has no samples."
+            )
+            return
+
+        result = remove_DC_component(signal)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save DC Removal Result",
+            defaultextension=".txt",
+            filetypes=[
+                ("Text Files", "*.txt")
+            ]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "DC Component Removed"
+        )
 
 
 root = tk.Tk()

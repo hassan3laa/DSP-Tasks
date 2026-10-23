@@ -157,3 +157,14 @@ def modify_component (amplitudes, phases, k ,new_amplitude = None, new_phase = N
     if new_phase is not None:
         phases[k]=new_phase
     return amplitudes, phases
+
+def remove_DC_component(signal):
+    updated_signal = Signal(signal.signal_type, signal.is_periodic, signal.n)
+    updated_signal.indices = signal.indices.copy()
+
+    mean_value = sum(signal.samples) / len(signal.samples)
+
+    for sample in signal.samples:
+        updated_signal.samples.append(sample - mean_value)
+
+    return updated_signal
