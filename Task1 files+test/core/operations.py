@@ -168,3 +168,21 @@ def remove_DC_component(signal):
         updated_signal.samples.append(sample - mean_value)
 
     return updated_signal
+
+def idft(amplitudes, phases):
+    n = len(amplitudes)
+    if n == 0:
+        raise ValueError("No frequency components provided")
+
+    if len(phases) != n:
+        raise ValueError("Amplitudes and phases must have the same length")
+
+    samples = []
+    for i in range(n):
+        real = 0
+        for k in range(n):
+            angle = 2 * math.pi * k * i / n
+            real += amplitudes[k] * math.cos(angle + phases[k])
+        samples.append(real / n)
+
+    return samples

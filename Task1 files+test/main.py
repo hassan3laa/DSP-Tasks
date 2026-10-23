@@ -91,6 +91,7 @@ class SignalGUI:
             "Accumulation",
             "Quantization",
             "DFT",
+            "IDFT",
             "Modify Components",
             "Remove DC Component"
         ]
@@ -312,6 +313,9 @@ class SignalGUI:
 
         elif operation == "DFT":
             self.dft()
+
+        elif operation == "IDFT":
+            self.idft()
 
         elif operation == "Modify Components":
             self.modify_components()
@@ -931,6 +935,54 @@ class SignalGUI:
             result,
             "DC Component Removed"
         )
+
+    def idft(self):
+        if len(self.signal_paths) != 1 or not self.signal_paths[0]:
+            messagebox.showerror("Error", "Please select one signal file.")
+            return
+
+        file_path = self.signal_paths[0]
+
+        file_path = self.signal_paths[0]
+
+        try:
+            amps, phases = read_amp_phase(file_path)
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not read the file: {e}")
+            return
+
+        if not amps:
+            messagebox.showerror("Error", "No amplitude/phase data found in the file.")
+            return
+
+        try:
+            reconstructed = idft(amps, phases)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to compute IDFT: {e}")
+            return
+
+        indices = list(range(len(reconstructed)))
+        result_signal = Signal(0, 0, len(reconstructed))
+        result_signal.indices = indices
+        result_signal.samples = reconstructed
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save IDFT Result",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result_signal, output_path)
+
+            expected_txt = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "Task4", "Test Cases", "IDFT", "Output_Signal_IDFT.txt"
+            )
+            if os.path.exists(expected_txt):
+                SignalSamplesAreEqual("IDFT", expected_txt, indices, reconstructed)
+
+        plot_signal(result_signal, "Reconstructed Time-Domain Signal (IDFT)")
 
 
 root = tk.Tk()
