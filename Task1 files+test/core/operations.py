@@ -186,3 +186,84 @@ def idft(amplitudes, phases):
         samples.append(real / n)
 
     return samples
+
+def calculate_first_derivative(signal):
+    result = Signal(signal.signal_type, signal.is_periodic, signal.n - 1)
+    result.indices = signal.indices[1:].copy()
+
+    for i in range(1, signal.n):
+        result.samples.append(signal.samples[i] - signal.samples[i - 1])
+
+    return result
+
+
+def calculate_second_derivative(signal):
+    result = Signal(signal.signal_type, signal.is_periodic, signal.n - 2)
+    result.indices = signal.indices[1:-1].copy()
+
+    for i in range(1, signal.n - 1):
+        result.samples.append(
+            signal.samples[i + 1]
+            - 2 * signal.samples[i]
+            + signal.samples[i - 1]
+        )
+
+    return result
+
+
+def moving_average(signal, window_size):
+    if window_size <= 0:
+        raise ValueError("Window size must be positive")
+
+    if window_size > len(signal.samples):
+        raise ValueError("Window size cannot exceed the number of samples")
+
+    result_n = len(signal.samples) - window_size + 1
+
+    result = Signal(
+        signal.signal_type,
+        signal.is_periodic,
+        result_n
+    )
+
+    result.indices = signal.indices[:result_n].copy()
+
+    for i in range(result_n):
+        total = 0
+
+        for j in range(window_size):
+            total += signal.samples[i + j]
+
+        result.samples.append(total / window_size)
+
+    return result
+
+
+def fold_signal(signal):
+    result = Signal(
+        signal.signal_type,
+        signal.is_periodic,
+        signal.n
+    )
+
+    result.indices = signal.indices.copy()
+    result.samples = signal.samples[::-1].copy()
+
+    return result
+
+
+def shift_signal(signal, shift_amount):
+    result = Signal(
+        signal.signal_type,
+        signal.is_periodic,
+        signal.n
+    )
+
+    result.indices = [
+        index + shift_amount
+        for index in signal.indices
+    ]
+
+    result.samples = signal.samples.copy()
+
+    return result

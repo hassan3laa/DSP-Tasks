@@ -20,6 +20,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "Task4", "Test Cases"
 from signalcompare import SignalComapreAmplitude, SignalComaprePhaseShift
 
 
+from Task5.Shifting_and_Folding.Shift_Fold_Signal import Shift_Fold_Signal
+
+
+
+
 def read_amp_phase(path):
     if path.endswith(".docx"):
         lines = [p.text for p in Document(path).paragraphs]
@@ -93,7 +98,13 @@ class SignalGUI:
             "DFT",
             "IDFT",
             "Modify Components",
-            "Remove DC Component"
+            "Remove DC Component",
+            "First Derivative",
+            "Second Derivative",
+            "Moving Average",
+            "Folding",
+            "Shifting and Folding"
+
         ]
 
         self.operation_menu = tk.OptionMenu(
@@ -191,6 +202,31 @@ class SignalGUI:
         self.new_phase_entry = tk.Entry(self.modify_frame, width=8)
         self.new_phase_entry.pack(side=tk.LEFT, padx=5)
 
+        self.moving_average_frame = tk.Frame(root)
+
+        tk.Label(
+            self.moving_average_frame,
+            text="Window Size:"
+        ).pack(side=tk.LEFT)
+
+        self.window_size_entry = tk.Entry(
+            self.moving_average_frame,
+            width=10
+        )
+        self.window_size_entry.pack(side=tk.LEFT, padx=10)
+
+        self.shift_frame = tk.Frame(root)
+
+        tk.Label(
+            self.shift_frame,
+            text="Shift Amount:"
+        ).pack(side=tk.LEFT)
+
+        self.shift_entry = tk.Entry(
+            self.shift_frame,
+            width=10
+        )
+        self.shift_entry.pack(side=tk.LEFT, padx=10)
 
         tk.Button(
             root,
@@ -264,6 +300,8 @@ class SignalGUI:
         self.quantization_frame.pack_forget()
         self.sampling_frame.pack_forget()
         self.modify_frame.pack_forget()
+        self.moving_average_frame.pack_forget()
+        self.shift_frame.pack_forget()
 
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
@@ -280,6 +318,12 @@ class SignalGUI:
         elif operation == "Modify Components":
             self.sampling_frame.pack(pady=5)
             self.modify_frame.pack(pady=5)
+
+        elif operation == "Moving Average":
+            self.moving_average_frame.pack(pady=5)
+
+        elif operation == "Shifting and Folding":
+            self.shift_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -322,6 +366,21 @@ class SignalGUI:
 
         elif operation == "Remove DC Component":
             self.remove_DC_component()
+
+        elif operation == "First Derivative":
+            self.first_derivative()
+
+        elif operation == "Second Derivative":
+            self.second_derivative()
+
+        elif operation == "Moving Average":
+            self.moving_average()
+
+        elif operation == "Folding":
+            self.shifting_and_folding(fold_only=True)
+
+        elif operation == "Shifting and Folding":
+            self.shifting_and_folding(fold_only=False)
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -983,6 +1042,173 @@ class SignalGUI:
                 SignalSamplesAreEqual("IDFT", expected_txt, indices, reconstructed)
 
         plot_signal(result_signal, "Reconstructed Time-Domain Signal (IDFT)")
+
+    def first_derivative(self):
+        if len(self.signal_paths) != 1 or not self.signal_paths[0]:
+            messagebox.showerror("Error", "Please select one signal file.")
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if signal.n < 2:
+            messagebox.showerror("Error", "Signal must have at least 2 samples.")
+            return
+
+        result = calculate_first_derivative(signal)
+
+        plot_signal(result, "First Derivative")
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save First Derivative",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+    def second_derivative(self):
+        if len(self.signal_paths) != 1 or not self.signal_paths[0]:
+            messagebox.showerror("Error", "Please select one signal file.")
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if signal.n < 3:
+            messagebox.showerror("Error", "Signal must have at least 3 samples.")
+            return
+
+        result = calculate_second_derivative(signal)
+
+        plot_signal(result, "Second Derivative")
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Second Derivative",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+    def moving_average(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if self.signal_paths[0] == "":
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        try:
+            window_size = int(self.window_size_entry.get())
+
+            signal = read_signal(self.signal_paths[0])
+            result = moving_average(signal, window_size)
+
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Moving Average Result",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(result, "Moving Average Result")
+
+    def shifting_and_folding(self, fold_only=False):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if not self.signal_paths[0]:
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        try:
+            signal = read_signal(self.signal_paths[0])
+
+            if not signal.samples:
+                raise ValueError("The selected signal has no samples.")
+
+            result = fold_signal(signal)
+
+            if fold_only:
+                expected_file = os.path.join(
+                    os.path.dirname(__file__),
+                    "Task5",
+                    "Shifting_and_Folding",
+                    "Output_fold.txt"
+                )
+                title = "Folding Result"
+
+            else:
+                shift_amount = int(self.shift_entry.get())
+                result = shift_signal(result, shift_amount)
+
+                expected_files = {
+                    500: "Output_ShifFoldedby500.txt",
+                    -500: "Output_ShiftFoldedby-500.txt"
+                }
+
+                if shift_amount in expected_files:
+                    expected_file = os.path.join(
+                        os.path.dirname(__file__),
+                        "Task5",
+                        "Shifting_and_Folding",
+                        expected_files[shift_amount]
+                    )
+                else:
+                    expected_file = None
+
+                title = "Shifting and Folding Result"
+
+        except ValueError as error:
+            messagebox.showerror("Error", str(error))
+            return
+
+        if expected_file is not None:
+            try:
+                Shift_Fold_Signal(
+                    expected_file,
+                    result.indices,
+                    result.samples
+                )
+            except (OSError, ValueError) as error:
+                print(f"Could not run Shift/Fold test: {error}")
+        else:
+            print(
+                "No expected output file for this shift amount. "
+                "The result was not compared."
+            )
+
+        output_path = filedialog.asksaveasfilename(
+            title=f"Save {title}",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(result, title)
 
 
 root = tk.Tk()
