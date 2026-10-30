@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Task1 files+test/Task5/Shifting and Folding" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.14" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 (DSP-Tasks)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

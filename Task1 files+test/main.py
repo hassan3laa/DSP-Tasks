@@ -103,7 +103,9 @@ class SignalGUI:
             "Second Derivative",
             "Moving Average",
             "Folding",
-            "Shifting and Folding"
+            "Shifting and Folding",
+            "Delay/Advance Folded Signal",
+            "Remove DC (Time Domain)"
 
         ]
 
@@ -228,6 +230,29 @@ class SignalGUI:
         )
         self.shift_entry.pack(side=tk.LEFT, padx=10)
 
+        self.delay_frame = tk.Frame(root)
+
+        self.delay_direction = tk.StringVar()
+        self.delay_direction.set("Delay")
+
+        tk.OptionMenu(
+            self.delay_frame,
+            self.delay_direction,
+            "Delay",
+            "Advance"
+        ).pack(side=tk.LEFT, padx=5)
+
+        tk.Label(
+            self.delay_frame,
+            text="By (samples):"
+        ).pack(side=tk.LEFT)
+
+        self.delay_entry = tk.Entry(
+            self.delay_frame,
+            width=10
+        )
+        self.delay_entry.pack(side=tk.LEFT, padx=5)
+
         tk.Button(
             root,
             text="Execute",
@@ -302,6 +327,8 @@ class SignalGUI:
         self.modify_frame.pack_forget()
         self.moving_average_frame.pack_forget()
         self.shift_frame.pack_forget()
+        self.shift_frame.pack_forget()
+        self.delay_frame.pack_forget()
 
         if operation == "Multiplication":
             self.constant_frame.pack(pady=5)
@@ -324,6 +351,12 @@ class SignalGUI:
 
         elif operation == "Shifting and Folding":
             self.shift_frame.pack(pady=5)
+
+        elif operation == "Shifting and Folding":
+            self.shift_frame.pack(pady=5)
+
+        elif operation == "Delay/Advance Folded Signal":
+            self.delay_frame.pack(pady=5)
 
     def execute(self):
         operation = self.operation.get()
@@ -381,6 +414,12 @@ class SignalGUI:
 
         elif operation == "Shifting and Folding":
             self.shifting_and_folding(fold_only=False)
+
+        elif operation == "Delay/Advance Folded Signal":
+            self.delay_advance_folded()
+
+        elif operation == "Remove DC (Time Domain)":
+            self.remove_dc_time_domain()
 
     def display_signal(self):
         if len(self.signal_paths) != 1:
@@ -1209,6 +1248,109 @@ class SignalGUI:
             write_signal(result, output_path)
 
         plot_signal(result, title)
+
+    def delay_advance_folded(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if not self.signal_paths[0]:
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        try:
+            amount = int(self.delay_entry.get())
+        except ValueError:
+            messagebox.showerror(
+                "Error",
+                "Please enter a valid integer amount."
+            )
+            return
+
+        if amount < 0:
+            messagebox.showerror(
+                "Error",
+                "The amount must be zero or positive."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if not signal.samples:
+            messagebox.showerror(
+                "Error",
+                "The selected signal has no samples."
+            )
+            return
+
+        if self.delay_direction.get() == "Delay":
+            shift_amount = amount
+        else:
+            shift_amount = -amount
+
+        result = shift_folded_signal(signal, shift_amount)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save Delayed/Advanced Folded Signal",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            self.delay_direction.get() + "ed Folded Signal"
+            if self.delay_direction.get() == "Delay"
+            else "Advanced Folded Signal"
+        )
+
+    def remove_dc_time_domain(self):
+        if len(self.signal_paths) != 1:
+            messagebox.showerror(
+                "Error",
+                "Please set the number of signals to 1."
+            )
+            return
+
+        if not self.signal_paths[0]:
+            messagebox.showerror(
+                "Error",
+                "Please select a signal file."
+            )
+            return
+
+        signal = read_signal(self.signal_paths[0])
+
+        if not signal.samples:
+            messagebox.showerror(
+                "Error",
+                "The selected signal has no samples."
+            )
+            return
+
+        result = remove_dc_time_domain(signal)
+
+        output_path = filedialog.asksaveasfilename(
+            title="Save DC Removal Result (Time Domain)",
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
+
+        if output_path:
+            write_signal(result, output_path)
+
+        plot_signal(
+            result,
+            "DC Removed (Time Domain)"
+        )
 
 
 root = tk.Tk()

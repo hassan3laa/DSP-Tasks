@@ -267,3 +267,22 @@ def shift_signal(signal, shift_amount):
     result.samples = signal.samples.copy()
 
     return result
+
+def shift_folded_signal(signal, shift_amount):
+    folded = fold_signal(signal)
+    return shift_signal(folded, shift_amount)
+
+
+def remove_dc_time_domain(signal):
+    if len(signal.samples) == 0:
+        raise ValueError("Signal has no samples")
+
+    _, amplitudes, phases = dft(signal, 1)
+
+    amplitudes, phases = modify_component(amplitudes, phases, 0, new_amplitude=0)
+
+    result = Signal(signal.signal_type, signal.is_periodic, signal.n)
+    result.indices = signal.indices.copy()
+    result.samples = idft(amplitudes, phases)
+
+    return result
